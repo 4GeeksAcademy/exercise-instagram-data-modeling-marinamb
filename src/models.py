@@ -7,58 +7,52 @@ from eralchemy2 import render_er
 
 Base = declarative_base()
 
+class UserPrivate(Base):
+    __tablename__ = 'user_private'
+    id = Column(Integer, primary_key=True)
+    user_name = Column(String(15), nullable=False, unique=True)
+    password = Column(String(128), nullable=False)  
+    email = Column(String(50), nullable=False, unique=True)
+    public_profile = relationship('UserPublic', back_populates='private_profile', uselist=False)
 
-class User_private(Base):
-    __tablename__='User Private'
-    user_private_id= Column(Integer, primary_key=True)
-    user_name=Column(String(15), nullable=False, unique= True)
-    password=Column(String(15), nullable=False)
-    email= Column(String(20), nullable=False, unique=True)
 
-
-class User_public (Base):
-    __tablename__='User Public'
-    user_public_id= Column(Integer, primary_key=True)
+class UserPublic (Base):
+    __tablename__='user_public'
+    id= Column(Integer, primary_key=True)
     user_name=Column(String(15), nullable=False, unique= True)
     description = Column(String(250), nullable=True, unique=True)
-    user_private_id = Column(Integer, ForeignKey(User_private.user_private_id))
-
-
+    user_private_id = Column(Integer, ForeignKey("user_private.id"))
+    images = relationship("Images", back_populates="user_public")
+    user_private = relationship("UserPrivate", back_populates="user_public")
+    post = relationship("Post", back_populates="user_public")
+    likes = relationship("Likes", back_populates="user_public")
 
 class Images (Base):
-    __tablename__='Images'
-    images_id = Column(Integer, primary_key=True)
+    __tablename__='images'
+    id = Column(Integer, primary_key=True)
     profile_photo = Column(Boolean) 
-    user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
+    user_public_id=Column(Integer, ForeignKey("user_public.id"))
+    post_id=Column(Integer, ForeignKey("post.id"))
+    user_public = relationship("UserPublic", back_populates="images")
+    post = relationship("Post", back_populates="images")
 
 class Post (Base):
-    __tablename__='Post'
-    post_id= Column(Integer, primary_key=True)
-    user_public_id=Column(Integer, ForeignKey(User_public.user_public_id))
-    image_id = Column(Integer, ForeignKey(Images.images_id)) 
-    post = Column(Enum, nullable=False)
-
+    __tablename__='post'
+    id= Column(Integer, primary_key=True)
+    user_public_id=Column(Integer, ForeignKey("user_public.id"))
+    image_id = Column(Integer, ForeignKey("Images.id")) 
+    user_public = relationship("UserPublic", back_populates="post")
+    images = relationship("Images", back_populates="post")
+    likes = relationship("Likes", back_populates="post")
 
 class Likes(Base):
-    __tablename__='Likes'
-    like_id=Column(Integer, primary_key=True)
+    __tablename__='likes'
+    id=Column(Integer, primary_key=True)
     likes= Column(Integer, nullable=True)
-    post_id = Column(Integer, ForeignKey(Post.post_id))
-    user_liking_id = Column (Integer, ForeignKey(User_public.user_public_id))
-
-class Feed (Base):
-    __tablename__='Feed'  
-    feed_id=Column(Integer, primary_key=True)
-    user_public_id= Column(Integer, ForeignKey(User_public.user_public_id))
-    post= Column(String, unique=True)
-    post_id =Column(Integer, ForeignKey(Post.post_id))
-
-class Followers (Base):
-    __tablename__='Followers'
-    follower_id= Column(Integer, primary_key=True)
-    user_followers=Column(Integer, ForeignKey(User_public.user_public_id))
-    user_following=Column(Integer, ForeignKey(User_public.user_public_id))
-
+    post_id = Column(Integer, ForeignKey("Post.id"))
+    user_public_id=Column(Integer, ForeignKey("user_public.id"))
+    user_public = relationship("UserPublic", back_populates="likes")
+    post = relationship("Post", back_populates="likes")
 
 ## Draw from SQLAlchemy base
 try:
